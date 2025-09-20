@@ -1,0 +1,52 @@
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const ModuleFederationPlugin =
+  require("@module-federation/enhanced").ModuleFederationPlugin;
+const path = require("path");
+const deps = require("./package.json").dependencies;
+const {
+  createSharedConfig,
+  createDevServerConfig,
+  babelConfig,
+} = require("../shared-config");
+
+module.exports = {
+  entry: "./src/index",
+  mode: "development",
+  target: "web",
+  devServer: createDevServerConfig(3002),
+
+  output: {
+    publicPath: "auto",
+  },
+  module: {
+    rules: [
+      {
+        test: /\.jsx?$/,
+        loader: "babel-loader",
+        exclude: /node_modules/,
+        options: babelConfig,
+      },
+    ],
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      name: "app2",
+      filename: "remoteEntry.js",
+      exposes: {
+        "./Widget": "./src/Widget",
+      },
+      shared: createSharedConfig(),
+      dts: {
+        generateTypes: true,
+        generateAPITypes: true,
+      },
+      manifest: {
+        fileName: "mf-manifest.json",
+        getPublicPath: () => "auto",
+      },
+    }),
+    new HtmlWebpackPlugin({
+      template: "./public/index.html",
+    }),
+  ],
+};
