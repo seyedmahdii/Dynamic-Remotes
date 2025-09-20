@@ -81,6 +81,17 @@ const getRemoteEntry = (port: number): string => {
   return `${baseUrl}:${port}/remoteEntry.js`;
 };
 
+registerRemotes([
+  {
+    name: "app2",
+    entry: getRemoteEntry(3002),
+  },
+  {
+    name: "app3",
+    entry: getRemoteEntry(3003),
+  },
+]);
+
 registerPlugins(
   createDefaultPlugins({
     retry: {
@@ -131,7 +142,10 @@ function useDynamicImport({
           isRetry ? ` (retry ${retryCount + 1})` : ""
         }`
       );
-      const Component = null;
+      const remoteModule = await loadRemote<{ default: React.ComponentType }>(
+        `${scope}/${module}`
+      );
+      const Component = remoteModule?.default;
       if (Component) {
         setComponent(() => Component);
       } else {
